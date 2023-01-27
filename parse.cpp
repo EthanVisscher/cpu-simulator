@@ -6,6 +6,7 @@
 #include "cpu.h"
 #include "memory.h"
 #include "clock.h"
+#include "imemory.h"
 
 using namespace std;
 
@@ -25,6 +26,7 @@ int main(int argc, char* argv[])
     Cpu* cpu = new Cpu();
     Clock* clock = new Clock();
     Memory* memory = new Memory();
+    IMemory* imemory = new IMemory();
 
     clock->registerCpu(cpu);
     cpu->registerMemory(memory);
@@ -42,6 +44,9 @@ int main(int argc, char* argv[])
         else if (device == "memory") {
             memory->parse(infile);
         }
+        else if (device == "imemory") {
+            imemory->parse(infile);
+        }
 
         infile >> device;
     }
@@ -49,5 +54,6 @@ int main(int argc, char* argv[])
     delete cpu;
     delete clock;
     delete memory;
+    delete imemory;
     return 0; 
 }
