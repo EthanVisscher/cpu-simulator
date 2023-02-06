@@ -25,7 +25,12 @@ class Cpu : public ParseClient, public ClockClient
         Cpu();
         void registerMemory(Memory* newMemory);
 
-        void parse(ifstream& infile);
+        // parse client interface functions
+        void parse(ifstream& infile, string command);
+        void reset();
+        void dump(ifstream& infile);
+
+        // clock client interface functions
         void startTick();
         void doCycleWork();
         void isMoreWorkNeeded();
@@ -37,9 +42,7 @@ class Cpu : public ParseClient, public ClockClient
         CpuState state;
         Memory* memory;
 
-        void reset();
         void setReg(CpuReg reg, uint8_t val);
-        void dump();
 };
 
 #endif

@@ -12,29 +12,16 @@ Memory::~Memory()
     free(memPtr);
 }
 
-// parse commands from file stream
-void Memory::parse(ifstream& infile) 
-{
-    string command;
-    infile >> command;
+// parse client interface functions
 
+// parse commands from file stream
+void Memory::parse(ifstream& infile, string command) 
+{
     if (command == "create") {
         infile >> command;
         unsigned int createSize = (unsigned int)stoi(command, 0, 16);
         create(createSize);
     } 
-    else if (command == "reset") {
-        reset();
-    }
-    else if (command == "dump") {
-        infile >> command;
-        unsigned int offset = stoi(command, 0, 16);
-
-        infile >> command;
-        unsigned int count = stoi(command, 0, 16);
-
-        dump(offset, count);
-    }
     else if (command == "set") {
         infile >> command;
         unsigned int offset = stoi(command, 0, 16);
@@ -50,57 +37,24 @@ void Memory::parse(ifstream& infile)
     }
 }
 
-void Memory::startTick() 
-{
-
-}
-
-void Memory::doCycleWork()
-{
-
-}
-
-void Memory::isMoreWorkNeeded()
-{
-
-}
-
-// api called to initiate fetch or writes from or to memory
-void Memory::memStartFetch(unsigned int offset, unsigned int count,
-                            uint8_t *dataPtr, uint8_t *memDonePtr)
-{
-    if (count == 1) {
-        *dataPtr = memPtr[offset];
-    }
-    else {
-        memcpy(dataPtr, memPtr + offset, count);
-    }
-
-    *memDonePtr = 1;
-}
-
-// create memory segment
-void Memory::create(size_t createSize)
-{
-    size = createSize;
-    memPtr = (uint8_t*)malloc(size);
-}
-
 // reset memory to all 0's
 void Memory::reset()
 {
     memset(memPtr, 0, size);
 }
 
-// set byte of memory at <offset> to <val>
-void Memory::set(unsigned int offset, uint8_t val)
-{
-    *(memPtr + offset) = val;
-}
-
 // dump out <count> bytes of memory starting at <offset>
-void Memory::dump(unsigned int offset, unsigned int count)
-{
+void Memory::dump(ifstream& infile)
+{    
+    unsigned int offset = 0;
+    unsigned int count = 0;
+
+    string command;
+    infile >> command;
+    offset = stoi(command, 0, 16);
+    infile >> command;
+    count = stoi(command, 0, 16);
+
     // out of bounds
     if (offset + count > size) {
         return;
@@ -142,4 +96,51 @@ void Memory::dump(unsigned int offset, unsigned int count)
         firstDigit += 0x10;
     }
     printf("\n");
+}
+
+// clock client inerface functions
+
+void Memory::startTick() 
+{
+
+}
+
+void Memory::doCycleWork()
+{
+
+}
+
+void Memory::isMoreWorkNeeded()
+{
+
+}
+
+// memory specific functions
+
+// api called to initiate fetch or writes from or to memory
+void Memory::memStartFetch(unsigned int offset, unsigned int count,
+                            uint8_t *dataPtr, uint8_t *memDonePtr)
+{
+    if (count == 1) {
+        *dataPtr = memPtr[offset];
+    }
+    else {
+        memcpy(dataPtr, memPtr + offset, count);
+    }
+
+    *memDonePtr = 1;
+}
+
+// create memory segment
+void Memory::create(size_t createSize)
+{
+    size = createSize;
+    memPtr = (uint8_t*)malloc(size);
+}
+
+
+// set byte of memory at <offset> to <val>
+void Memory::set(unsigned int offset, uint8_t val)
+{
+    *(memPtr + offset) = val;
 }

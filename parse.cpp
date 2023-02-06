@@ -1,14 +1,4 @@
-#include <stdio.h>
-#include <string.h>
-#include <fstream>
-#include <iostream>
-
-#include "cpu.h"
-#include "memory.h"
-#include "clock.h"
-#include "imemory.h"
-
-using namespace std;
+#include "parse.h"
 
 int main(int argc, char* argv[]) 
 {
@@ -29,26 +19,32 @@ int main(int argc, char* argv[])
     IMemory* imemory = new IMemory();
 
     clock->registerClient(cpu);
+    clock->registerClient(memory);
     cpu->registerMemory(memory);
 
     // start parsing file
-    string device;
-    infile >> device;
+    ParseClient* device;
+    string command;
+    infile >> command;  // get device name
     while (infile) {
-        if (device == "cpu") {
-            cpu->parse(infile);
-        }
-        else if (device == "clock") {
-            clock->parse(infile);
-        }
-        else if (device == "memory") {
-            memory->parse(infile);
-        }
-        else if (device == "imemory") {
-            imemory->parse(infile);
-        }
+        if (command == "cpu")
+            device = cpu;
+        else if (command == "clock")
+            device = clock;
+        else if (command == "memory")
+            device = memory;
+        else if (command == "imemory")
+            device = imemory;
 
-        infile >> device;
+        infile >> command;  // get next command
+        if (command == "reset")
+            device->reset();
+        else if (command == "dump")
+            device->dump(infile);
+        else
+            device->parse(infile, command);
+
+        infile >> command;  // get next name
     }
 
    return 0; 

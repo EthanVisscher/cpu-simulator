@@ -24,7 +24,12 @@ class Memory : public ParseClient, public ClockClient
         void memStartFetch(unsigned int addr, unsigned int count,
                             uint8_t *dataPtr, uint8_t *memDonePtr);
 
-        void parse(ifstream& infile);
+        // parse client interface functions
+        void parse(ifstream& infile, string command);
+        void reset();
+        void dump(ifstream& infile);
+
+        // clock client interface functions
         void startTick();
         void doCycleWork();
         void isMoreWorkNeeded();
@@ -32,12 +37,10 @@ class Memory : public ParseClient, public ClockClient
     private:
         uint8_t state;
         uint8_t* memPtr;
-        size_t size;
+        size_t size;        
 
-        void reset();
         void create(size_t createSize);
         void set(unsigned int offset, uint8_t val);
-        void dump(unsigned int offset, unsigned int count);
 };
 
 #endif

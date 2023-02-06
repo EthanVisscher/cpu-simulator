@@ -12,43 +12,14 @@ IMemory::~IMemory()
     free(memPtr);
 }
 
-// api called to initiate fetch or writes from or to memory
-void IMemory::memStartFetch(unsigned int offset, unsigned int count,
-                            uint32_t *dataPtr, uint32_t *memDonePtr)
-{
-    if (count == 1) {
-        *dataPtr = memPtr[offset];
-    }
-    else {
-        memcpy(dataPtr, memPtr + offset, count);
-    }
-
-    *memDonePtr = 1;
-}
-
 // parse commands from file stream
-void IMemory::parse(ifstream& infile) 
+void IMemory::parse(ifstream& infile, string command) 
 {
-    string command;
-    infile >> command;
-
     if (command == "create") {
         infile >> command;
         unsigned int createSize = (unsigned int)stoi(command, 0, 16);
         create(createSize);
     } 
-    else if (command == "reset") {
-        reset();
-    }
-    else if (command == "dump") {
-        infile >> command;
-        unsigned int offset = stoi(command, 0, 16);
-
-        infile >> command;
-        unsigned int count = stoi(command, 0, 16);
-
-        dump(offset, count);
-    }
     else if (command == "set") {
         infile >> command;
         unsigned int offset = stoi(command, 0, 16);
@@ -64,28 +35,24 @@ void IMemory::parse(ifstream& infile)
     }
 }
 
-// create memory segment
-void IMemory::create(size_t createSize)
-{
-    size = createSize;
-    memPtr = (uint32_t*)malloc(size);
-}
-
 // reset memory to all 0's
 void IMemory::reset()
 {
     memset(memPtr, 0, size);
 }
 
-// set byte of memory at <offset> to <val>
-void IMemory::set(unsigned int offset, uint32_t val)
-{
-    *(memPtr + offset) = val;
-}
-
 // dump out <count> bytes of memory starting at <offset>
-void IMemory::dump(unsigned int offset, unsigned int count)
+void IMemory::dump(ifstream& infile)
 {
+    unsigned int offset = 0;
+    unsigned int count = 0;
+
+    string command;
+    infile >> command;
+    offset = stoi(command, 0, 16);
+    infile >> command;
+    count = stoi(command, 0, 16);
+
     // out of bounds
     if (offset + count > size) {
         return;
@@ -127,4 +94,33 @@ void IMemory::dump(unsigned int offset, unsigned int count)
         firstDigit += 0x10;
     }
     printf("\n");
+}
+
+// imemory specific functions
+
+// api called to initiate fetch or writes from or to memory
+void IMemory::memStartFetch(unsigned int offset, unsigned int count,
+                            uint32_t *dataPtr, uint32_t *memDonePtr)
+{
+    if (count == 1) {
+        *dataPtr = memPtr[offset];
+    }
+    else {
+        memcpy(dataPtr, memPtr + offset, count);
+    }
+
+    *memDonePtr = 1;
+}
+
+// create memory segment
+void IMemory::create(size_t createSize)
+{
+    size = createSize;
+    memPtr = (uint32_t*)malloc(size);
+}
+
+// set byte of memory at <offset> to <val>
+void IMemory::set(unsigned int offset, uint32_t val)
+{
+    *(memPtr + offset) = val;
 }

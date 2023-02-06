@@ -19,16 +19,17 @@ class Clock : public ParseClient
         Clock();
         void registerClient(ClockClient* client);
 
-        void parse(ifstream& infile);
+        // clock client inerface functions
+        void parse(ifstream& infile, string command);
+        void reset();
+        void dump(ifstream& infile);
 
     private:
-        uint16_t counter;
+        uint16_t counter;          // current tick
         ClockClient* clients[10];  // devices registered to clock
         uint8_t numOfClients = 0;
 
-        void reset();
         void tick(uint16_t ticks);
-        void dump();
 };
 
 #endif

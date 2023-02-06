@@ -6,8 +6,9 @@ using namespace std;
 class ParseClient
 {
     public:
-        // parse commands from given file
-        virtual void parse(ifstream& infile) = 0; 
+        virtual void parse(ifstream& infile, string command) = 0; 
+        virtual void reset() = 0;
+        virtual void dump(ifstream& infile) = 0;
 };
 
 #endif
