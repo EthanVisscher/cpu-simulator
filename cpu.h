@@ -5,39 +5,40 @@
 #include <string.h>
 #include <fstream>
 #include <iostream>
-
 #include <stdint.h>
 #include <cstdio>
 
 #include "memory.h"
+#include "parse_client.h"
+#include "clock_client.h"
 
 using namespace std;
 
-#define PC  0
-#define RA  1
-#define RB  2
-#define RC  3
-#define RD  4
-#define RE  5
-#define RF  6
-#define RG  7
-#define RH  8
+#define NUM_OF_REGS 8
 
-class Cpu
+class Cpu : public ParseClient, public ClockClient
 {
     public:
+        enum CpuReg {RA, RB, RC, RD, RE, RF, RG, RH, PC};
+        enum CpuState {Idle, Fetch, Waiting, Executing};
+
         Cpu();
-        void doCycleWork();
-        void parse(ifstream& infile);
         void registerMemory(Memory* newMemory);
+
+        void parse(ifstream& infile);
+        void startTick();
+        void doCycleWork();
+        void isMoreWorkNeeded();
 
     private:
         // program counter and registers RA through RH
-        uint8_t regs[9];
+        uint8_t pc;
+        uint8_t regs[8];
+        CpuState state;
         Memory* memory;
 
         void reset();
-        void setReg(uint8_t reg, uint8_t val);
+        void setReg(CpuReg reg, uint8_t val);
         void dump();
 };
 

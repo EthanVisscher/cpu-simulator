@@ -12,20 +12,6 @@ Memory::~Memory()
     free(memPtr);
 }
 
-// api called to initiate fetch or writes from or to memory
-void Memory::memStartFetch(unsigned int offset, unsigned int count,
-                            uint8_t *dataPtr, uint8_t *memDonePtr)
-{
-    if (count == 1) {
-        *dataPtr = memPtr[offset];
-    }
-    else {
-        memcpy(dataPtr, memPtr + offset, count);
-    }
-
-    *memDonePtr = 1;
-}
-
 // parse commands from file stream
 void Memory::parse(ifstream& infile) 
 {
@@ -62,6 +48,35 @@ void Memory::parse(ifstream& infile)
             set(offset + i, val);
         }
     }
+}
+
+void Memory::startTick() 
+{
+
+}
+
+void Memory::doCycleWork()
+{
+
+}
+
+void Memory::isMoreWorkNeeded()
+{
+
+}
+
+// api called to initiate fetch or writes from or to memory
+void Memory::memStartFetch(unsigned int offset, unsigned int count,
+                            uint8_t *dataPtr, uint8_t *memDonePtr)
+{
+    if (count == 1) {
+        *dataPtr = memPtr[offset];
+    }
+    else {
+        memcpy(dataPtr, memPtr + offset, count);
+    }
+
+    *memDonePtr = 1;
 }
 
 // create memory segment

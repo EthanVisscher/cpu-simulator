@@ -26,8 +26,9 @@ void Clock::parse(ifstream& infile)
 }
 
 // register a cpu to the clock device
-void Clock::registerCpu(Cpu* newCpu) {
-    cpu = newCpu;
+void Clock::registerClient(ClockClient* client) {
+    clients[numOfClients] = client;
+    numOfClients++;
 }
 
 // resets internal counter to 0
@@ -40,7 +41,7 @@ void Clock::reset()
 void Clock::tick(uint16_t ticks) 
 {
     for (int i = 1; i <= ticks; i++) {
-        cpu->doCycleWork();
+        //cpu->doCycleWork();
         counter += 1;
     }
 }

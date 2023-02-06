@@ -28,7 +28,7 @@ int main(int argc, char* argv[])
     Memory* memory = new Memory();
     IMemory* imemory = new IMemory();
 
-    clock->registerCpu(cpu);
+    clock->registerClient(cpu);
     cpu->registerMemory(memory);
 
     // start parsing file
@@ -51,9 +51,5 @@ int main(int argc, char* argv[])
         infile >> device;
     }
 
-    delete cpu;
-    delete clock;
-    delete memory;
-    delete imemory;
-    return 0; 
+   return 0; 
 }

@@ -5,24 +5,26 @@
 #include <string.h>
 #include <fstream>
 #include <iostream>
-
 #include <stdint.h>
 #include <cstdio>
 
 #include "cpu.h"
+#include "parse_client.h"
 
 using namespace std;
 
-class Clock 
+class Clock : public ParseClient
 {
     public:
         Clock();
+        void registerClient(ClockClient* client);
+
         void parse(ifstream& infile);
-        void registerCpu(Cpu* newCpu);
 
     private:
         uint16_t counter;
-        Cpu* cpu;           // cpu registered to clock
+        ClockClient* clients[10];  // devices registered to clock
+        uint8_t numOfClients = 0;
 
         void reset();
         void tick(uint16_t ticks);
