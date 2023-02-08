@@ -82,7 +82,7 @@ void Memory::dump(ifstream& infile)
             }
             // done printing
             else if (k >= count) {
-                printf("\n");
+                printf("\n\n");
                 return;
             }
             else {
@@ -95,7 +95,7 @@ void Memory::dump(ifstream& infile)
         printf("\n");
         firstDigit += 0x10;
     }
-    printf("\n");
+    printf("\n\n");
 }
 
 // clock client inerface functions

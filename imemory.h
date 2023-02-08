@@ -26,12 +26,14 @@ class IMemory : public ParseClient
         void reset();
         void dump(ifstream& infile);
 
+        // TESTING: CHANGE BACK TO PRIVATE
+        void create(size_t createSize);
+        void set(unsigned int offset, uint32_t val);
+
     private:
         uint32_t* memPtr;
         size_t size;
 
-        void create(size_t createSize);
-        void set(unsigned int offset, uint32_t val);
 };
 
 #endif

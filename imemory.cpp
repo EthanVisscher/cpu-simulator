@@ -23,14 +23,32 @@ void IMemory::parse(ifstream& infile, string command)
     else if (command == "set") {
         infile >> command;
         unsigned int offset = stoi(command, 0, 16);
-
         infile >> command;
-        unsigned int count = stoi(command, 0, 16);
 
-        for (unsigned int i = 0; i < count; i++) {
+        if (command == "file") {
             infile >> command;
-            uint8_t val = stoi(command, 0, 16);
-            set(offset + i, val);
+            ifstream instructions(command); 
+            if (!infile)
+                return;
+
+            string instructionText;
+            unsigned int i = 0;
+            while(instructions) {
+                instructions >> instructionText;
+                uint32_t instruction = stoi(instructionText, 0, 16);
+                set(offset + i, instruction);
+                i++;
+            }
+        }
+        else {
+            infile >> command;
+            unsigned int count = stoi(command, 0, 16);
+
+            for (unsigned int i = 0; i < count; i++) {
+                infile >> command;
+                uint32_t val = stoi(command, 0, 16);
+                set(offset + i, val);
+            }
         }
     }
 }
@@ -58,40 +76,40 @@ void IMemory::dump(ifstream& infile)
         return;
     }
 
-    unsigned int firstDigit = (offset & 0xF0) >> 4;
-    unsigned int lastDigit = (offset & 0x0F);
+    unsigned int row = offset - (offset % 8);
+    unsigned int startCol = offset % 8;
 
     // calculate amount of rows to  print, not including first row
     unsigned int rows = 0;
-    rows += (offset + count) / 16;
-    if ((offset + count) % 16 > 0) {
+    rows += (offset + count) / 8;
+    if ((offset + count) % 8 > 0) {
         rows += 1;
     }
 
-    printf("Addr     0     1     2     3     4      5     6     7\n");
+    printf("Addr     0     1     2     3     4     5     6     7\n");
     unsigned int k = 0;
     for (unsigned int i = 0; i < rows; i++) {
-        printf("0x%02X ", firstDigit);
+        printf("0x%02X ", row);
 
-        for (unsigned int j = 0; j < 16; j++) {
+        for (unsigned int j = 0; j < 8; j++) {
             // need to start at an offset
-            if (i == 0 && j < lastDigit) {
-                printf("   ");
+            if (i == 0 && j < startCol) {
+                printf("      ");
             }
             // done printing
             else if (k >= count) {
-                printf("\n");
+                printf("\n\n");
                 return;
             }
             else {
-                printf("%02X ", *(memPtr + offset + k));
+                printf("%05X ", *(memPtr + offset + k));
                 k += 1;
             }
 
         }
 
         printf("\n");
-        firstDigit += 0x10;
+        row += 8;
     }
     printf("\n");
 }

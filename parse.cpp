@@ -3,14 +3,12 @@
 int main(int argc, char* argv[]) 
 {
     // open file stream
-    if (argc < 2) {
+    if (argc < 2)
         return 1;
-    }
 
     ifstream infile(argv[1]);
-    if (!infile) {
+    if (!infile)
         return 1;
-    }
 
     // create device objects
     Cpu* cpu = new Cpu();
