@@ -14,6 +14,10 @@
 
 using namespace std;
 
+#define MEM_STATE_IDLE  0
+#define MEM_STATE_WAIT  1
+#define MEM_STATE_MOVE  2
+
 class Memory : public ParseClient, public ClockClient 
 {
     public:
