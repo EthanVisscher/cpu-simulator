@@ -15,10 +15,10 @@ void Cpu::parse(ifstream& infile, string command)
         infile >> command;
 
         if (command == "reg") {
-            uint8_t reg = RA;
+            uint8_t reg = 0;
             infile >> command;
             if (command == "PC")
-                reg = PC;
+                reg = CPU_REG_PC;
             else
                 reg = (command[1] - 'A');
 
@@ -63,12 +63,12 @@ void Cpu::startTick()
 void Cpu::doCycleWork() 
 {
     // shift values in registers
-    for (int i = RH; i > RA; i--) 
+    for (int i = CPU_REG_RH; i > CPU_REG_RA; i--) 
         setReg(i, regs[i - 1]);
 
     // fetch instruction
     uint8_t fetchDone;
-    memory->memStartFetch(pc, 1, &regs[RA], &fetchDone);
+    memory->memStartFetch(pc, 1, &regs[CPU_REG_RA], &fetchDone);
 
     pc++;
 }
@@ -87,7 +87,7 @@ void Cpu::registerMemory(Memory* newMemory)
 }
 
 // register instruction memory device to cpu device
-void Cpu::registerMemory(IMemory* newIMemory) 
+void Cpu::registerIMemory(IMemory* newIMemory) 
 {
     imemory = newIMemory;
 }
@@ -95,7 +95,7 @@ void Cpu::registerMemory(IMemory* newIMemory)
 // sets the register <reg> to the value <val>
 void Cpu::setReg(uint8_t reg, uint8_t val)
 {
-    if (reg == PC) {
+    if (reg == CPU_REG_PC) {
         pc = val;
     }
     else {
