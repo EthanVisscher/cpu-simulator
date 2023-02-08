@@ -21,6 +21,7 @@ int main(int argc, char* argv[])
     clock->registerClient(cpu);
     clock->registerClient(memory);
     cpu->registerMemory(memory);
+    cpu->registerIMemory(imemory);
 
     // start parsing file
     ParseClient* device;

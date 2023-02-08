@@ -21,8 +21,6 @@ using namespace std;
 class Memory : public ParseClient, public ClockClient 
 {
     public:
-        enum MemState {Idle, Wait, Move};
-
         Memory();
         ~Memory();
         void memStartFetch(unsigned int addr, unsigned int count,

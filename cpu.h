@@ -9,6 +9,7 @@
 #include <cstdio>
 
 #include "memory.h"
+#include "imemory.h"
 #include "parse_client.h"
 #include "clock_client.h"
 
@@ -33,11 +34,9 @@ using namespace std;
 class Cpu : public ParseClient, public ClockClient
 {
     public:
-        enum CpuReg {RA, RB, RC, RD, RE, RF, RG, RH, PC};
-        enum CpuState {Idle, Fetch, Waiting, Executing};
-
         Cpu();
         void registerMemory(Memory* newMemory);
+        void registerIMemory(IMemory* newIMemory);
 
         // parse client interface functions
         void parse(ifstream& infile, string command);
@@ -55,6 +54,7 @@ class Cpu : public ParseClient, public ClockClient
         uint8_t regs[8];
         uint8_t state;
         Memory* memory;
+        IMemory* imemory;
 
         void setReg(uint8_t reg, uint8_t val);
 };

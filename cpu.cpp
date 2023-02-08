@@ -86,6 +86,12 @@ void Cpu::registerMemory(Memory* newMemory)
     memory = newMemory;
 }
 
+// register instruction memory device to cpu device
+void Cpu::registerMemory(IMemory* newIMemory) 
+{
+    imemory = newIMemory;
+}
+
 // sets the register <reg> to the value <val>
 void Cpu::setReg(uint8_t reg, uint8_t val)
 {
