@@ -4,6 +4,7 @@
 Memory::Memory()
 {
     size = 0;
+    state = MEM_STATE_IDLE;
 }
 
 // Memory class destructor
@@ -102,33 +103,81 @@ void Memory::dump(ifstream& infile)
 
 void Memory::startTick() 
 {
-
+    working = 1;
+    if (state == MEM_STATE_WAIT && fsCount == 5)
+        state = MEM_STATE_MOVE;
 }
 
 void Memory::doCycleWork()
 {
+    if (state == MEM_STATE_WAIT) {
+        fsCount += 1;
+    }
+    else if (state == MEM_STATE_MOVE) {
+        if (fsType == WAIT_ON_FETCH)
+            completeFetch();
+        else
+            completeStore();
 
+        *fsDonePtr = 1;
+        state = MEM_STATE_IDLE;
+    }
+
+    working = 0;
 }
 
-void Memory::isMoreWorkNeeded()
+uint8_t Memory::isMoreWorkNeeded()
 {
-
+    return working; 
 }
 
 // memory specific functions
 
-// api called to initiate fetch or writes from or to memory
+// set variables for current fetch or store instruction
+void Memory::setFsInfo(unsigned int offset, unsigned int count,
+                        uint8_t *dataPtr, uint8_t *memDonePtr)
+{
+    *memDonePtr = 0;
+    state = MEM_STATE_WAIT;
+    fsTickCount = 0;
+    fsOffset = offset;
+    fsCount = count;
+    fsDataPtr = dataPtr;
+    fsDonePtr = memDonePtr;
+}
+
+// api called from cpu to start fetch
 void Memory::memStartFetch(unsigned int offset, unsigned int count,
                             uint8_t *dataPtr, uint8_t *memDonePtr)
 {
-    if (count == 1) {
-        *dataPtr = memPtr[offset];
-    }
-    else {
-        memcpy(dataPtr, memPtr + offset, count);
-    }
+    fsType = WAIT_ON_FETCH;
+    setFsInfo(offset, count, dataPtr, memDonePtr);
+}
 
-    *memDonePtr = 1;
+// called from doCycleWork to finish the fetch
+void Memory::completeFetch()
+{
+    if (fsCount == 1)
+        *fsDataPtr = memPtr[fsOffset];
+    else
+        memcpy(fsDataPtr, memPtr + fsOffset, fsCount);
+}
+
+// api called from cpu to start store
+void Memory::memStartStore(unsigned int offset, unsigned int count,
+                                uint8_t *dataPtr, uint8_t *memDonePtr)
+{
+    fsType = WAIT_ON_STORE;
+    setFsInfo(offset, count, dataPtr, memDonePtr);
+}
+
+// called from doCycleWork to finish the store
+void Memory::completeStore()
+{
+    if (fsCount == 1)
+        memPtr[fsOffset] = *fsDataPtr;
+    else
+        memcpy(memPtr + fsOffset, fsDataPtr, fsCount);
 }
 
 // create memory segment

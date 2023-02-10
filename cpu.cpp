@@ -4,6 +4,7 @@
 Cpu::Cpu()
 {
     reset();
+    state = CPU_STATE_IDLE;
 }
 
 // parse client interface functions
@@ -56,29 +57,65 @@ void Cpu::dump(ifstream& infile)
 
 void Cpu::startTick() 
 {
+    working = 1;
+    if (state == CPU_STATE_IDLE) {
+        state = CPU_STATE_FETCH;
+        working = 0;
+    } 
+    else if (state == CPU_STATE_WAIT) {
+        // check if fetch or store is done
+        if (fsDone == 1) {
+            if (instruction.inst == CPU_INST_LW)
+                regs[instruction.dest] = fsData;
+            state = CPU_STATE_IDLE;
+        }
 
+        working = 0;
+    }
 }
 
 // called by clock to give cpu a chance to do some work
 void Cpu::doCycleWork() 
 {
-    // shift values in registers
-    for (int i = CPU_REG_RH; i > CPU_REG_RA; i--) 
-        setReg(i, regs[i - 1]);
+    if (working == 0)
+        return;
 
-    // fetch instruction
-    uint8_t fetchDone;
-    memory->memStartFetch(pc, 1, &regs[CPU_REG_RA], &fetchDone);
+    if (state == CPU_STATE_FETCH) {
+        decodeInstruction(imemory->fetchInstruction(pc));
+        pc++;
+        state = CPU_STATE_EXEC;
+    }
+    else if (state == CPU_STATE_EXEC) {
+        // load word
+        if (instruction.inst == CPU_INST_LW) {
+            memory->memStartFetch(instruction.tarReg, 1, &fsData, &fsDone);
+        }
+        // store word
+        else if (instruction.inst == CPU_INST_SW) {
+            fsData = regs[instruction.srcReg];
+            memory->memStartStore(instruction.tarReg, 1, &fsData, &fsDone);
+        }
 
-    pc++;
+        state = CPU_STATE_WAIT;
+        working = 0;
+    }
 }
 
-void Cpu::isMoreWorkNeeded() 
+uint8_t Cpu::isMoreWorkNeeded() 
 {
-
+    return working;
 }
 
 // cpu specific functions
+
+void Cpu::decodeInstruction(uint32_t newInstruction)
+{
+    instruction.inst = ((newInstruction >> CPU_INST_SHIFT) & CPU_INST_MASK);
+    instruction.dest = ((newInstruction >> CPU_DEST_SHIFT) & CPU_DEST_MASK);
+    instruction.srcReg = ((newInstruction >> CPU_SRC_REG_SHIFT) & CPU_SRC_REG_MASK);
+    instruction.tarReg = ((newInstruction >> CPU_TAR_REG_SHIFT) & CPU_TAR_REG_MASK);
+    instruction.val = ((newInstruction >> CPU_VAL_SHIFT) & CPU_VAL_MASK);
+}
 
 // register memory device to cpu device
 void Cpu::registerMemory(Memory* newMemory) 
@@ -96,6 +133,9 @@ void Cpu::registerIMemory(IMemory* newIMemory)
 void Cpu::setReg(uint8_t reg, uint8_t val)
 {
     if (reg == CPU_REG_PC) {
+        // setting pc cancels current process
+        state = CPU_STATE_FETCH; 
+        working = 0;
         pc = val;
     }
     else {

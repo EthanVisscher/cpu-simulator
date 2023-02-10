@@ -43,8 +43,20 @@ void Clock::registerClient(ClockClient* client) {
 void Clock::tick(uint16_t ticks) 
 {
     for (int i = 1; i <= ticks; i++) {
+        // let clients perpare for cycle
         for (int j = 0; j < numOfClients; j++)
-            clients[j]->doCycleWork();
+            clients[j]->startTick();
+
+        uint8_t working = 1;
+        while (working > 0) {
+            for (int j = 0; j < numOfClients; j++)
+                clients[j]->doCycleWork();
+
+            // poll to see if any clients still need to work
+            working = 0;
+            for (int j = 0; j < numOfClients; j++)
+                working += clients[j]->isMoreWorkNeeded();
+        }
 
         counter += 1;
     }

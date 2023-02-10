@@ -116,18 +116,10 @@ void IMemory::dump(ifstream& infile)
 
 // imemory specific functions
 
-// api called to initiate fetch or writes from or to memory
-void IMemory::memStartFetch(unsigned int offset, unsigned int count,
-                            uint32_t *dataPtr, uint32_t *memDonePtr)
+// api to fetch instruction, called by CPU
+uint32_t IMemory::fetchInstruction(unsigned int offset)
 {
-    if (count == 1) {
-        *dataPtr = memPtr[offset];
-    }
-    else {
-        memcpy(dataPtr, memPtr + offset, count);
-    }
-
-    *memDonePtr = 1;
+    return memPtr[offset];
 }
 
 // create memory segment
