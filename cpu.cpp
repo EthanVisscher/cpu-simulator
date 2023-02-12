@@ -33,6 +33,7 @@ void Cpu::parse(ifstream& infile, string command)
 // resets the program counter and all registers to 0
 void Cpu::reset()
 {
+    pc = 0x0;
     for (int i = 0; i < CPU_NUM_OF_REGS; i++) {
         regs[i] = 0;
     }
@@ -41,15 +42,15 @@ void Cpu::reset()
 // dumps the contents of the program counter and all registers
 void Cpu::dump(ifstream& infile)
 {
-    printf("PC: 0x%X\n", pc);
-    printf("RA: 0x%X\n", regs[CPU_REG_RA]);
-    printf("RB: 0x%X\n", regs[CPU_REG_RB]);
-    printf("RC: 0x%X\n", regs[CPU_REG_RC]);
-    printf("RD: 0x%X\n", regs[CPU_REG_RD]);
-    printf("RE: 0x%X\n", regs[CPU_REG_RE]);
-    printf("RF: 0x%X\n", regs[CPU_REG_RF]);
-    printf("RG: 0x%X\n", regs[CPU_REG_RG]);
-    printf("RH: 0x%X\n", regs[CPU_REG_RH]);
+    printf("PC: 0x%02X\n", pc);
+    printf("RA: 0x%02X\n", regs[CPU_REG_RA]);
+    printf("RB: 0x%02X\n", regs[CPU_REG_RB]);
+    printf("RC: 0x%02X\n", regs[CPU_REG_RC]);
+    printf("RD: 0x%02X\n", regs[CPU_REG_RD]);
+    printf("RE: 0x%02X\n", regs[CPU_REG_RE]);
+    printf("RF: 0x%02X\n", regs[CPU_REG_RF]);
+    printf("RG: 0x%02X\n", regs[CPU_REG_RG]);
+    printf("RH: 0x%02X\n", regs[CPU_REG_RH]);
     printf("\n");
 }
 
@@ -60,9 +61,13 @@ void Cpu::startTick()
     working = 1;
     if (state == CPU_STATE_IDLE) {
         state = CPU_STATE_FETCH;
-        working = 0;
     } 
-    else if (state == CPU_STATE_WAIT) {
+}
+
+// called by clock to give cpu a chance to do some work
+void Cpu::doCycleWork() 
+{
+    if (state == CPU_STATE_WAIT) {
         // check if fetch or store is done
         if (fsDone == 1) {
             if (instruction.inst == CPU_INST_LW)
@@ -72,11 +77,7 @@ void Cpu::startTick()
 
         working = 0;
     }
-}
 
-// called by clock to give cpu a chance to do some work
-void Cpu::doCycleWork() 
-{
     if (working == 0)
         return;
 
@@ -88,12 +89,12 @@ void Cpu::doCycleWork()
     else if (state == CPU_STATE_EXEC) {
         // load word
         if (instruction.inst == CPU_INST_LW) {
-            memory->memStartFetch(instruction.tarReg, 1, &fsData, &fsDone);
+            memory->memStartFetch(regs[instruction.tarReg], 1, &fsData, &fsDone);
         }
         // store word
         else if (instruction.inst == CPU_INST_SW) {
             fsData = regs[instruction.srcReg];
-            memory->memStartStore(instruction.tarReg, 1, &fsData, &fsDone);
+            memory->memStartStore(regs[instruction.tarReg], 1, &fsData, &fsDone);
         }
 
         state = CPU_STATE_WAIT;

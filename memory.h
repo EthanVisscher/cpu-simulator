@@ -20,6 +20,7 @@ using namespace std;
 
 #define WAIT_ON_FETCH   1
 #define WAIT_ON_STORE   2
+#define MEM_FS_SPEED    4
 
 class Memory : public ParseClient, public ClockClient 
 {

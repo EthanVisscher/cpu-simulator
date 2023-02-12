@@ -104,14 +104,26 @@ void Memory::dump(ifstream& infile)
 void Memory::startTick() 
 {
     working = 1;
-    if (state == MEM_STATE_WAIT && fsCount == 5)
-        state = MEM_STATE_MOVE;
+    if (state == MEM_STATE_WAIT) {
+        fsTickCount += 1;
+        if (fsTickCount == MEM_FS_SPEED)
+            state = MEM_STATE_MOVE;     // fetch or store complete
+        else 
+            working = 0;                // still waiting
+    }
+    else if (state == MEM_STATE_IDLE)
+    {
+        working = 0;       
+    }
 }
 
 void Memory::doCycleWork()
 {
-    if (state == MEM_STATE_WAIT) {
-        fsCount += 1;
+    if (working == 0)
+        return;
+
+    if (state == MEM_STATE_IDLE) {
+        working = 0;
     }
     else if (state == MEM_STATE_MOVE) {
         if (fsType == WAIT_ON_FETCH)
@@ -122,8 +134,6 @@ void Memory::doCycleWork()
         *fsDonePtr = 1;
         state = MEM_STATE_IDLE;
     }
-
-    working = 0;
 }
 
 uint8_t Memory::isMoreWorkNeeded()
@@ -175,7 +185,9 @@ void Memory::memStartStore(unsigned int offset, unsigned int count,
 void Memory::completeStore()
 {
     if (fsCount == 1)
+    {
         memPtr[fsOffset] = *fsDataPtr;
+    }
     else
         memcpy(memPtr + fsOffset, fsDataPtr, fsCount);
 }
