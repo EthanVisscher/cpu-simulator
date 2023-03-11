@@ -30,6 +30,7 @@ using namespace std;
 #define CPU_STATE_FETCH 2
 #define CPU_STATE_WAIT  3
 #define CPU_STATE_EXEC  4
+#define CPU_STATE_WORK  5
 
 #define CPU_INST_MASK       0b111
 #define CPU_DEST_MASK       0b111
@@ -45,6 +46,16 @@ using namespace std;
 
 #define CPU_INST_LW     0b101
 #define CPU_INST_SW     0b110
+#define CPU_INST_ADD    0b000
+#define CPU_INST_ADDI   0b001
+#define CPU_INST_MUL    0b010
+#define CPU_INST_INV    0b011
+#define CPU_INST_BRANCH 0b100
+#define CPU_INST_BEQ    0b000
+#define CPU_INST_BNEQ   0b001
+#define CPU_INST_BLT    0b010
+#define CPU_INST_HALT   0b111
+
 
 class Cpu : public ParseClient, public ClockClient
 {
@@ -76,10 +87,11 @@ class Cpu : public ParseClient, public ClockClient
         uint8_t working;    // currently working in cycle
         uint8_t pc;         // program counter
         uint8_t regs[8];    // registers RA-RH
+        uint8_t tickCount;  // used for multiple cycle instructions
+        bool halted;        // stops all CPU processes
         Memory* memory;     // data memory
         IMemory* imemory;   // instruction memory
         Instruction instruction;
-
 
         // variables for fetching and storing to memory
         uint8_t fsData; 

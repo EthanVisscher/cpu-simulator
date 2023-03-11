@@ -44,7 +44,7 @@ class Memory : public ParseClient, public ClockClient
 
     private:
         uint8_t state;          // state of memory
-        uint8_t working;    // currently working in cycle
+        uint8_t working;        // currently working in cycle
         uint8_t* memPtr;        // malloc'd memory segment
         size_t size;            // size of memory segment
 

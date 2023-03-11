@@ -5,6 +5,7 @@ Cpu::Cpu()
 {
     reset();
     state = CPU_STATE_IDLE;
+    halted = false;
 }
 
 // parse client interface functions
@@ -58,6 +59,9 @@ void Cpu::dump(ifstream& infile)
 
 void Cpu::startTick() 
 {
+    if (halted)
+        return;
+
     working = 1;
     if (state == CPU_STATE_IDLE) {
         state = CPU_STATE_FETCH;
@@ -67,6 +71,9 @@ void Cpu::startTick()
 // called by clock to give cpu a chance to do some work
 void Cpu::doCycleWork() 
 {
+    if (halted)
+        return;
+
     if (state == CPU_STATE_WAIT) {
         // check if fetch or store is done
         if (fsDone == 1) {
@@ -74,6 +81,13 @@ void Cpu::doCycleWork()
                 regs[instruction.dest] = fsData;
             state = CPU_STATE_IDLE;
         }
+
+        working = 0;
+    }
+    else if (state == CPU_STATE_WORK) {
+        tickCount--;
+        if (tickCount == 0) 
+            state = CPU_STATE_IDLE;
 
         working = 0;
     }
@@ -90,14 +104,90 @@ void Cpu::doCycleWork()
         // load word
         if (instruction.inst == CPU_INST_LW) {
             memory->memStartFetch(regs[instruction.tarReg], 1, &fsData, &fsDone);
+            state = CPU_STATE_WAIT;
         }
         // store word
         else if (instruction.inst == CPU_INST_SW) {
             fsData = regs[instruction.srcReg];
             memory->memStartStore(regs[instruction.tarReg], 1, &fsData, &fsDone);
+            state = CPU_STATE_WAIT;
+        }
+        // add
+        else if (instruction.inst == CPU_INST_ADD) {
+            int8_t s = regs[instruction.srcReg]; 
+            int8_t t = regs[instruction.tarReg]; 
+            regs[instruction.dest] = s + t;
+            state = CPU_STATE_IDLE;
+        }
+        // add immediate
+        else if (instruction.inst == CPU_INST_ADDI) {
+            int8_t s = regs[instruction.srcReg];
+            int8_t i = instruction.val;
+            regs[instruction.dest] = s + i;
+            state = CPU_STATE_IDLE;
+        }
+        // mul
+        else if (instruction.inst == CPU_INST_MUL) {
+            uint8_t s = regs[instruction.srcReg];
+            uint8_t high = (s >> 4) & 0b1111;
+            uint8_t low = s & 0b1111;
+            regs[instruction.dest] = low * high;
+            tickCount = 1;      // takes 1 extra cycle
+            state = CPU_STATE_WORK;
+        }
+        // inv
+        else if (instruction.inst == CPU_INST_INV) {
+            uint8_t s = regs[instruction.srcReg];
+            regs[instruction.dest] = ~s;
+            state = CPU_STATE_IDLE;
+        }
+        // branches 
+        else if(instruction.inst == CPU_INST_BRANCH) {
+            // beq
+            if (instruction.dest == CPU_INST_BEQ) {
+                uint8_t s = regs[instruction.srcReg];
+                uint8_t t = regs[instruction.tarReg];
+                if (t == s) {
+                    pc = instruction.val;
+                    tickCount = 1;      // takes 1 extra cycle
+                    state = CPU_STATE_WORK;
+                }
+                else {
+                    state = CPU_STATE_IDLE;
+                }
+            }
+            // bneq
+            else if (instruction.dest == CPU_INST_BNEQ) {
+                uint8_t s = regs[instruction.srcReg];
+                uint8_t t = regs[instruction.tarReg];
+                if (t != s) {
+                    pc = instruction.val;
+                    tickCount = 1;      // takes 1 extra cycle
+                    state = CPU_STATE_WORK;
+                }
+                else {
+                    state = CPU_STATE_IDLE;
+                }
+            }
+            // blt
+            else if (instruction.dest == CPU_INST_BLT) {
+                int8_t s = regs[instruction.srcReg];
+                int8_t t = regs[instruction.tarReg];
+                if (s < t) {
+                    pc = instruction.val;
+                    tickCount = 1;      // takes 1 extra cycle
+                    state = CPU_STATE_WORK;
+                }
+                else {
+                    state = CPU_STATE_IDLE;
+                }
+            }
+        }
+        // halt
+        else if (instruction.inst == CPU_INST_HALT) {
+            halted = true;
         }
 
-        state = CPU_STATE_WAIT;
         working = 0;
     }
 }
