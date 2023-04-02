@@ -20,6 +20,8 @@ using namespace std;
 
 #define WAIT_ON_FETCH   1
 #define WAIT_ON_STORE   2
+#define WAIT_ON_FLUSH   3
+
 #define MEM_FS_SPEED    4
 
 class Memory : public ParseClient, public ClockClient 
@@ -27,10 +29,13 @@ class Memory : public ParseClient, public ClockClient
     public:
         Memory();
         ~Memory();
+        
         void memStartFetch(unsigned int offset, unsigned int count,
                             uint8_t *dataPtr, uint8_t *memDonePtr);
         void memStartStore(unsigned int offset, unsigned int count,
                             uint8_t *dataPtr, uint8_t *memDonePtr);
+        void memStartCacheFlush(unsigned int offset, uint8_t *dataPtr, 
+                                    uint8_t *statesPtr, uint8_t *memDonePtr);
 
         // parse client interface functions
         void parse(ifstream& infile, string command);
@@ -54,12 +59,14 @@ class Memory : public ParseClient, public ClockClient
         unsigned int fsCount;   // size of fetch or store
         uint8_t* fsDataPtr;  
         uint8_t* fsDonePtr;
-        uint8_t fsType;        // declares current wait as fetch or store
+        uint8_t fsType;         // declares current wait as fetch or store
+        uint8_t* fsStatesPtr;   // states of cache bytes
 
         void setFsInfo(unsigned int offset, unsigned int count,
                         uint8_t *dataPtr, uint8_t *memDonePtr);
         void completeFetch();
         void completeStore();
+        void completeCacheFlush();
         void create(size_t createSize);
         void set(unsigned int offset, uint8_t val);
 };

@@ -7,6 +7,7 @@
 #include "memory.h"
 #include "clock.h"
 #include "imemory.h"
+#include "cache.h"
 #include "parse_client.h"
 
 using namespace std;

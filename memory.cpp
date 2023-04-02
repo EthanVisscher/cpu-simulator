@@ -128,8 +128,10 @@ void Memory::doCycleWork()
     else if (state == MEM_STATE_MOVE) {
         if (fsType == WAIT_ON_FETCH)
             completeFetch();
-        else
+        else if (fsType == WAIT_ON_STORE)
             completeStore();
+        else
+            completeCacheFlush();
 
         *fsDonePtr = 1;
         state = MEM_STATE_IDLE;
@@ -190,6 +192,25 @@ void Memory::completeStore()
     }
     else
         memcpy(memPtr + fsOffset, fsDataPtr, fsCount);
+}
+
+void Memory::memStartCacheFlush(unsigned int offset, uint8_t *dataPtr, 
+                            uint8_t *statesPtr, uint8_t *memDonePtr)
+{
+    fsType = WAIT_ON_FLUSH;
+    fsStatesPtr = statesPtr;
+    setFsInfo(offset, 8, dataPtr, memDonePtr);
+}
+
+void Memory::completeCacheFlush()
+{
+    for (unsigned int i = 0; i < fsCount; i++) {
+        // write written cache data to memory
+        if (fsStatesPtr[i] == 'W') {
+            memPtr[fsOffset + i] = fsDataPtr[i];
+            fsStatesPtr[i] = 'V';
+        }
+    }
 }
 
 // create memory segment

@@ -4,8 +4,6 @@
 Cpu::Cpu()
 {
     reset();
-    state = CPU_STATE_IDLE;
-    halted = false;
 }
 
 // parse client interface functions
@@ -32,8 +30,13 @@ void Cpu::parse(ifstream& infile, string command)
 }
 
 // resets the program counter and all registers to 0
+// unhalts cpu and sets tick counter to 0
 void Cpu::reset()
 {
+    state = CPU_STATE_IDLE;
+    halted = false;
+    tc = 0;
+
     pc = 0x0;
     for (int i = 0; i < CPU_NUM_OF_REGS; i++) {
         regs[i] = 0;
@@ -52,6 +55,7 @@ void Cpu::dump(ifstream& infile)
     printf("RF: 0x%02X\n", regs[CPU_REG_RF]);
     printf("RG: 0x%02X\n", regs[CPU_REG_RG]);
     printf("RH: 0x%02X\n", regs[CPU_REG_RH]);
+    printf("TC: %d\n", tc);
     printf("\n");
 }
 
@@ -62,6 +66,7 @@ void Cpu::startTick()
     if (halted)
         return;
 
+    tc++;
     working = 1;
     if (state == CPU_STATE_IDLE) {
         state = CPU_STATE_FETCH;
@@ -76,10 +81,22 @@ void Cpu::doCycleWork()
 
     if (state == CPU_STATE_WAIT) {
         // check if fetch or store is done
-        if (fsDone == 1) {
-            if (instruction.inst == CPU_INST_LW)
-                regs[instruction.dest] = fsData;
-            state = CPU_STATE_IDLE;
+        if (fsDone) {
+            if (instruction.inst == CPU_INST_LW) {
+                // cache was flushing, have to wait another 5 ticks to fill cache    
+                if (cache->isFlushing()) {
+                    cache->memStartFetch(regs[instruction.tarReg], 1, &fsData, &fsDone);
+                    state = CPU_STATE_WAIT;
+                }
+                else {
+                    regs[instruction.dest] = cache->getWord();
+                    state = CPU_STATE_IDLE;
+                }
+            }
+            else {
+                cache->setWord();
+                state = CPU_STATE_IDLE;
+            }
         }
 
         working = 0;
@@ -103,14 +120,25 @@ void Cpu::doCycleWork()
     else if (state == CPU_STATE_EXEC) {
         // load word
         if (instruction.inst == CPU_INST_LW) {
-            memory->memStartFetch(regs[instruction.tarReg], 1, &fsData, &fsDone);
-            state = CPU_STATE_WAIT;
+            cache->memStartFetch(regs[instruction.tarReg], 1, &fsData, &fsDone);
+            if (fsDone) {
+                // data was saved in cache
+                regs[instruction.dest] = fsData;    
+                state = CPU_STATE_IDLE;
+            }
+            else {
+                // not cached, have to wait 5 ticks
+                state = CPU_STATE_WAIT;
+            }
         }
         // store word
         else if (instruction.inst == CPU_INST_SW) {
             fsData = regs[instruction.srcReg];
-            memory->memStartStore(regs[instruction.tarReg], 1, &fsData, &fsDone);
-            state = CPU_STATE_WAIT;
+            cache->memStartStore(regs[instruction.tarReg], 1, &fsData, &fsDone);
+            if (fsDone)
+                state = CPU_STATE_IDLE;
+            else
+                state = CPU_STATE_WAIT;
         }
         // add
         else if (instruction.inst == CPU_INST_ADD) {
@@ -218,6 +246,11 @@ void Cpu::registerMemory(Memory* newMemory)
 void Cpu::registerIMemory(IMemory* newIMemory) 
 {
     imemory = newIMemory;
+}
+
+void Cpu::registerCache(Cache* newCache)
+{
+    cache = newCache;
 }
 
 // sets the register <reg> to the value <val>

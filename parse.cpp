@@ -15,11 +15,14 @@ int main(int argc, char* argv[])
     Clock* clock = new Clock();
     Memory* memory = new Memory();
     IMemory* imemory = new IMemory();
+    Cache* cache = new Cache();
 
     clock->registerClient(cpu);
     clock->registerClient(memory);
     cpu->registerMemory(memory);
     cpu->registerIMemory(imemory);
+    cpu->registerCache(cache);
+    cache->registerMemory(memory);
 
     // start parsing file
     ParseClient* device;
@@ -34,6 +37,8 @@ int main(int argc, char* argv[])
             device = memory;
         else if (command == "imemory")
             device = imemory;
+        else if (command == "cache")
+            device = cache;
 
         infile >> command;  // get next command
         if (command == "reset")

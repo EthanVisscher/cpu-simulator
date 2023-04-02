@@ -10,6 +10,7 @@
 
 #include "memory.h"
 #include "imemory.h"
+#include "cache.h"
 #include "parse_client.h"
 #include "clock_client.h"
 
@@ -71,6 +72,7 @@ class Cpu : public ParseClient, public ClockClient
         Cpu();
         void registerMemory(Memory* newMemory);
         void registerIMemory(IMemory* newIMemory);
+        void registerCache(Cache* newCache);
 
         // parse client interface functions
         void parse(ifstream& infile, string command);
@@ -86,16 +88,18 @@ class Cpu : public ParseClient, public ClockClient
         uint8_t state;      // current state of CPU
         uint8_t working;    // currently working in cycle
         uint8_t pc;         // program counter
+        uint16_t tc;        // tick count, not tickCount....
         uint8_t regs[8];    // registers RA-RH
         uint8_t tickCount;  // used for multiple cycle instructions
         bool halted;        // stops all CPU processes
         Memory* memory;     // data memory
         IMemory* imemory;   // instruction memory
+        Cache* cache;
         Instruction instruction;
 
         // variables for fetching and storing to memory
         uint8_t fsData; 
-        uint8_t fsDone; 
+        uint8_t fsDone;
 
         void decodeInstruction(uint32_t newInstruction);
         void setReg(uint8_t reg, uint8_t val);
