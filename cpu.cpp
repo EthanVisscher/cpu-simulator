@@ -120,25 +120,29 @@ void Cpu::doCycleWork()
     else if (state == CPU_STATE_EXEC) {
         // load word
         if (instruction.inst == CPU_INST_LW) {
-            cache->memStartFetch(regs[instruction.tarReg], 1, &fsData, &fsDone);
-            if (fsDone) {
-                // data was saved in cache
-                regs[instruction.dest] = fsData;    
-                state = CPU_STATE_IDLE;
-            }
-            else {
-                // not cached, have to wait 5 ticks
-                state = CPU_STATE_WAIT;
+            if (cache->isAvailableForFetch(regs[instruction.tarReg])) {
+                cache->memStartFetch(regs[instruction.tarReg], 1, &fsData, &fsDone);
+                if (fsDone) {
+                    // data was saved in cache
+                    regs[instruction.dest] = fsData;    
+                    state = CPU_STATE_IDLE;
+                }
+                else {
+                    // not cached, have to wait 5 ticks
+                    state = CPU_STATE_WAIT;
+                }
             }
         }
         // store word
         else if (instruction.inst == CPU_INST_SW) {
-            fsData = regs[instruction.srcReg];
-            cache->memStartStore(regs[instruction.tarReg], 1, &fsData, &fsDone);
-            if (fsDone)
-                state = CPU_STATE_IDLE;
-            else
-                state = CPU_STATE_WAIT;
+            if (cache->isAvailableForStore(regs[instruction.tarReg])) {
+                fsData = regs[instruction.srcReg];
+                cache->memStartStore(regs[instruction.tarReg], 1, &fsData, &fsDone);
+                if (fsDone)
+                    state = CPU_STATE_IDLE;
+                else
+                    state = CPU_STATE_WAIT;
+            }
         }
         // add
         else if (instruction.inst == CPU_INST_ADD) {

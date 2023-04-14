@@ -83,9 +83,11 @@ void Cache::memStartFetch(unsigned int offset, unsigned int count,
 void Cache::memStartStore(unsigned int offset, unsigned int count,
                                 uint8_t *dataPtr, uint8_t *memDonePtr)
 {
+    forceFlushed = false;
     if (!off) {
         if (offset == 0xFF) {
             flush(memDonePtr);
+            forceFlushed = true;
         }
         else if (hit(offset)) {
             // cache hit, write data to cache and mark as written
@@ -110,6 +112,24 @@ void Cache::memStartStore(unsigned int offset, unsigned int count,
     }
 }
 
+bool Cache::isAvailableForFetch(unsigned int offset)
+{
+    // cache can be used even if memory is unavailable
+    if ((hit(offset) && validData(offset)) || offset == 0xFF)
+        return true;
+
+    return memory->isAvailable();
+}
+
+bool Cache::isAvailableForStore(unsigned int offset)
+{
+    // cache can be used even if memory is unavailable
+    if (hit(offset))
+        return true;
+
+    return memory->isAvailable();
+}
+
 // used by cpu to get word after cache fetched data
 uint8_t Cache::getWord()
 {
@@ -127,6 +147,9 @@ uint8_t Cache::getWord()
 void Cache::setWord()
 {
     if (off)
+        return;
+    
+    if (forceFlushed)
         return;
 
     for (int i = 0; i < CACHE_NUM_OF_BYTES; i++)

@@ -36,6 +36,7 @@ class Memory : public ParseClient, public ClockClient
                             uint8_t *dataPtr, uint8_t *memDonePtr);
         void memStartCacheFlush(unsigned int offset, uint8_t *dataPtr, 
                                     uint8_t *statesPtr, uint8_t *memDonePtr);
+        bool isAvailable();
 
         // parse client interface functions
         void parse(ifstream& infile, string command);
@@ -61,6 +62,7 @@ class Memory : public ParseClient, public ClockClient
         uint8_t* fsDonePtr;
         uint8_t fsType;         // declares current wait as fetch or store
         uint8_t* fsStatesPtr;   // states of cache bytes
+        bool available;
 
         void setFsInfo(unsigned int offset, unsigned int count,
                         uint8_t *dataPtr, uint8_t *memDonePtr);

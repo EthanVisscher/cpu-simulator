@@ -89,7 +89,7 @@ class Cpu : public ParseClient, public ClockClient
         uint8_t working;    // currently working in cycle
         uint8_t pc;         // program counter
         uint16_t tc;        // tick count, not tickCount....
-        uint8_t regs[8];    // registers RA-RH
+        uint8_t regs[CPU_NUM_OF_REGS];  // registers RA-RH
         uint8_t tickCount;  // used for multiple cycle instructions
         bool halted;        // stops all CPU processes
         Memory* memory;     // data memory

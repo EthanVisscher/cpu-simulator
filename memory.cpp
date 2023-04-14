@@ -5,6 +5,7 @@ Memory::Memory()
 {
     size = 0;
     state = MEM_STATE_IDLE;
+    available = true;
 }
 
 // Memory class destructor
@@ -156,6 +157,7 @@ void Memory::setFsInfo(unsigned int offset, unsigned int count,
     fsCount = count;
     fsDataPtr = dataPtr;
     fsDonePtr = memDonePtr;
+    available = false;
 }
 
 // api called from cpu to start fetch
@@ -173,6 +175,8 @@ void Memory::completeFetch()
         *fsDataPtr = memPtr[fsOffset];
     else
         memcpy(fsDataPtr, memPtr + fsOffset, fsCount);
+
+    available = true;
 }
 
 // api called from cpu to start store
@@ -192,6 +196,8 @@ void Memory::completeStore()
     }
     else
         memcpy(memPtr + fsOffset, fsDataPtr, fsCount);
+
+    available = true;
 }
 
 void Memory::memStartCacheFlush(unsigned int offset, uint8_t *dataPtr, 
@@ -211,6 +217,14 @@ void Memory::completeCacheFlush()
             fsStatesPtr[i] = 'V';
         }
     }
+
+    available = true;
+}
+
+// returns true if no other device is using the memory
+bool Memory::isAvailable()
+{
+    return available;
 }
 
 // create memory segment

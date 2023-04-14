@@ -16,13 +16,16 @@ int main(int argc, char* argv[])
     Memory* memory = new Memory();
     IMemory* imemory = new IMemory();
     Cache* cache = new Cache();
+    IODev* iodev = new IODev();
 
     clock->registerClient(cpu);
     clock->registerClient(memory);
+    clock->registerClient(iodev);
     cpu->registerMemory(memory);
     cpu->registerIMemory(imemory);
     cpu->registerCache(cache);
     cache->registerMemory(memory);
+    iodev->registerMemory(memory);
 
     // start parsing file
     ParseClient* device;
@@ -39,6 +42,8 @@ int main(int argc, char* argv[])
             device = imemory;
         else if (command == "cache")
             device = cache;
+        else if (command == "iodev")
+            device = iodev;
 
         infile >> command;  // get next command
         if (command == "reset")

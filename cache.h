@@ -26,6 +26,8 @@ class Cache : public ParseClient
                             uint8_t *dataPtr, uint8_t *memDonePtr);
         void memStartStore(unsigned int offset, unsigned int count,
                             uint8_t *dataPtr, uint8_t *memDonePtr);
+        bool isAvailableForFetch(unsigned int offset);
+        bool isAvailableForStore(unsigned int offset);
         uint8_t getWord();
         void setWord();
         bool isFlushing();
@@ -42,6 +44,7 @@ class Cache : public ParseClient
         uint8_t states[8];
         bool flushing;
         Memory* memory;
+        bool forceFlushed;
 
         // variables to hold information on cache miss
         uint8_t loadedOffset;
